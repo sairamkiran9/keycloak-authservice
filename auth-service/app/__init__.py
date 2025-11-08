@@ -1,12 +1,24 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from app.config import Config
 from app.routes.auth import auth_bp
 from app.routes.protected import protected_bp
 
+# Initialize limiter globally
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Initialize rate limiter
+    limiter.init_app(app)
 
     # Enable CORS for all routes
     CORS(app, resources={
