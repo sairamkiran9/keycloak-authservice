@@ -1,0 +1,89 @@
+version: '3.8'
+
+# Docker Compose configuration for complete Keycloak Auth Service application
+# This orchestrates Keycloak, Flask Auth Service, and React Frontend
+
+services:
+  # Keycloak Identity Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak
+    environment:
+      # Using default Keycloak admin credentials
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    command: start-dev
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - keycloak-network
+
+  # Keycloak Init Container (runs once to configure Keycloak)
+  keycloak-init:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile.init
+    container_name: keycloak-init
+    env_file:
+      - .env.docker
+    depends_on:
+      - keycloak
+    networks:
+      - keycloak-network
+    restart: "no"  # Only run once, don't restart
+
+  # Flask Auth Service (Backend)
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    env_file:
+      - .env.docker
+    ports:
+      - "5000:5000"
+    depends_on:
+      keycloak-init:
+        condition: service_completed_successfully
+    networks:
+      - keycloak-network
+    volumes:
+      # Persist client data and logs
+      - ./auth-service/data:/app/data
+      - ./auth-service/logs:/app/logs
+    restart: unless-stopped
+
+  # React Frontend (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # API URL for build time (nginx will proxy to auth-service)
+        VITE_API_URL: http://localhost:3000
+    container_name: frontend
+    env_file:
+      - .env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      keycloak-init:
+        condition: service_completed_successfully
+      auth-service:
+        condition: service_started
+    networks:
+      - keycloak-network
+    restart: unless-stopped
+
+# Custom bridge network for service-to-service communication
+networks:
+  keycloak-network:
+    driver: bridge
+    name: keycloak-network
+
+# Persistent volumes
+volumes:
+  keycloak_data:
+    name: keycloak_data

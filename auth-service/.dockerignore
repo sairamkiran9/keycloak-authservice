@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs (we'll create fresh in container)
+logs/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+docs/
+
+# Scripts (exclude local setup but keep Docker setup)
+setup.sh
+setup.bat
+scripts/setup.sh
+scripts/README.md
+scripts/setup_keycloak.py
+# Keep: scripts/setup_keycloak_docker.py (needed for init container)
+
+# Test data (preserve structure but not test files)
+tests/

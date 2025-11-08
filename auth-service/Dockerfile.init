@@ -1,0 +1,23 @@
+# Dockerfile for Keycloak Init Container
+# This container runs once to configure Keycloak with realm, client, users, and roles
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# Install required Python packages (same version as auth-service)
+RUN pip install --no-cache-dir python-keycloak==3.7.0
+
+# Copy only the setup script
+COPY scripts/setup_keycloak_docker.py /app/setup_keycloak_docker.py
+
+# Make script executable
+RUN chmod +x /app/setup_keycloak_docker.py
+
+# Run the setup script
+CMD ["python", "/app/setup_keycloak_docker.py"]
