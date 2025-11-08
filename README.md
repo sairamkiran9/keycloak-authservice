@@ -1,5 +1,10 @@
 # Keycloak Auth Service + React Frontend
 
+[![Backend CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Backend%20CI/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci-backend.yml)
+[![Frontend CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Frontend%20CI/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci-frontend.yml)
+[![Docker Build](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Docker%20Build%20%26%20Push/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/docker-build.yml)
+[![Security](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Security%20Scanning/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/security-scan.yml)
+
 A complete authentication solution with **Keycloak** as the Identity Provider, **Python/Flask** auth service, and **React** frontend.
 
 ## 🌟 Features
@@ -10,6 +15,7 @@ A complete authentication solution with **Keycloak** as the Identity Provider, *
 - **🛡️ Security**: JWT validation, token refresh, protected routes
 - **🚀 Quick Setup**: Automated scripts for instant development
 - **📚 Comprehensive Docs**: Complete implementation guides
+- **🔄 CI/CD Pipeline**: Automated testing, building, and deployment with GitHub Actions
 
 ## 🏗️ Architecture
 
@@ -207,6 +213,38 @@ keycloak_authservice/
 | `/api/admin` | GET | Yes (admin) | Admin endpoint |
 | `/api/user-data` | GET | Yes | User data |
 
+## 🔄 CI/CD Pipeline
+
+This project includes a comprehensive CI/CD pipeline using GitHub Actions:
+
+- **✅ Automated Testing**: Backend (pytest), Frontend (build/lint), Integration tests
+- **🔒 Security Scanning**: Trivy, CodeQL, dependency audits
+- **🐳 Docker Builds**: Automated container builds and publishing
+- **🚀 Deployments**: Automated staging, manual production with rollback
+- **📊 Performance Testing**: Load testing with k6, Lighthouse audits
+- **🤖 Automation**: Dependabot, release creation, cleanup tasks
+
+**Quick Links:**
+- [CI/CD Guide](guide/CI_CD_GUIDE.md) - Complete setup and usage guide
+- [Quick Reference](guide/CI_CD_QUICK_REFERENCE.md) - Common commands and checklists
+- [Implementation Summary](CI_CD_IMPLEMENTATION_SUMMARY.md) - Overview of all workflows
+
+**Get Started:**
+```bash
+# See CI/CD setup instructions
+cat guide/CI_CD_GUIDE.md
+
+# View workflow status
+gh run list
+
+# Deploy to staging (automatic on push to develop)
+git push origin develop
+
+# Deploy to production (create version tag)
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
 ## 🛠️ Development
 
 ### Quick Commands
@@ -272,25 +310,6 @@ pytest tests/ -v
 cd frontend
 npm test
 ```
-
-## 📖 Documentation
-
-### Complete Guides
-
-- **[Docker Deployment Guide](guide/DOCKER_DEPLOYMENT_GUIDE.md)**: Complete Docker containerization with docker-compose
-- **[Local Setup Guide](docs/local-setup-guide.md)**: Complete Keycloak + Auth Service setup
-- **[React Implementation Guide](guide/REACT_FRONTEND_IMPLEMENTATION_GUIDE.md)**: Frontend development guide
-- **[Keycloak Automation Guide](guide/KEYCLOAK_AUTOMATION_GUIDE.md)**: Automated Keycloak configuration
-
-### Key Topics
-
-- **Automated Setup**: One-command complete setup with `./setup.sh`
-- **Keycloak Configuration**: Realm, clients, roles, users (automated)
-- **JWT Token Flow**: Access/refresh token handling
-- **Role-based Access**: User vs admin permissions
-- **API Security**: Protected endpoints and validation
-- **Frontend Integration**: React components and state management
-- **Docker Deployment**: Containerized deployment with health checks
 
 ## 🔐 Security Features
 
