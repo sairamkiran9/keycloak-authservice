@@ -6,13 +6,16 @@ from app.config import Config
 class KeycloakAdminClient:
     def __init__(self):
         """Initialize Keycloak Admin client"""
+        # Authenticate to master realm first
         self.admin = KeycloakAdmin(
             server_url=Config.KEYCLOAK_SERVER_URL,
             username=Config.KEYCLOAK_ADMIN,
             password=Config.KEYCLOAK_ADMIN_PASSWORD,
-            realm_name=Config.KEYCLOAK_REALM,
+            realm_name='master',  # Authenticate to master realm
             verify=True
         )
+        # Switch to target realm using non-deprecated property
+        self.admin.connection.realm_name = Config.KEYCLOAK_REALM
 
     def check_user_exists(self, username: str = None, email: str = None) -> dict:
         """

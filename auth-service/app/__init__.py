@@ -3,8 +3,6 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from app.config import Config
-from app.routes.auth import auth_bp
-from app.routes.protected import protected_bp
 
 # Initialize limiter globally
 limiter = Limiter(
@@ -29,6 +27,10 @@ def create_app(config_class=Config):
             "supports_credentials": True
         }
     })
+
+    # Import blueprints here to avoid circular imports
+    from app.routes.auth import auth_bp
+    from app.routes.protected import protected_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp)
