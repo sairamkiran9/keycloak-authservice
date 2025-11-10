@@ -13,6 +13,14 @@ class Config:
     KEYCLOAK_REALM = os.getenv('KEYCLOAK_REALM', 'microservices-realm')
     KEYCLOAK_CLIENT_ID = os.getenv('KEYCLOAK_CLIENT_ID', 'auth-service')
     KEYCLOAK_CLIENT_SECRET = os.getenv('KEYCLOAK_CLIENT_SECRET', '')
+
+    # Keycloak Admin credentials (for user management)
+    KEYCLOAK_ADMIN = os.getenv('KEYCLOAK_ADMIN') or 'admin'
+    KEYCLOAK_ADMIN_PASSWORD = os.getenv('KEYCLOAK_ADMIN_PASSWORD') or 'admin'
+
+    # Registration settings
+    REGISTRATION_ENABLED = os.getenv('REGISTRATION_ENABLED', 'true').lower() == 'true'
+    MIN_PASSWORD_LENGTH = int(os.getenv('MIN_PASSWORD_LENGTH', '8'))
     
     # Token
     TOKEN_ALGORITHM = 'RS256'

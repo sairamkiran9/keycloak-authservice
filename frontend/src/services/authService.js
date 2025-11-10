@@ -30,6 +30,34 @@ class AuthService {
     }
   }
 
+  // Register
+  async register(userData) {
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (data.details) {
+          throw new Error(JSON.stringify(data.details));
+        }
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  }
+
   // Logout
   async logout() {
     try {

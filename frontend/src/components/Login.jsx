@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -8,7 +8,19 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  // Get success message from navigation state (NEW)
+  const successMessage = location.state?.message;
+  const prefilledUsername = location.state?.username;
+
+  // Prefill username if provided (NEW)
+  useState(() => {
+    if (prefilledUsername) {
+      setUsername(prefilledUsername);
+    }
+  }, [prefilledUsername]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +69,13 @@ const Login = () => {
             />
           </div>
 
+          {/* Success Message (NEW) */}
+          {successMessage && (
+            <div style={styles.success}>
+              ✓ {successMessage}
+            </div>
+          )}
+
           {error && (
             <div style={styles.error}>
               ❌ {error}
@@ -75,6 +94,14 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        {/* Registration Link (NEW) */}
+        <div style={styles.footer}>
+          Don't have an account?{' '}
+          <Link to="/register" style={styles.link}>
+            Sign up here
+          </Link>
+        </div>
 
         <div style={styles.hint}>
           <p><strong>Test Users:</strong></p>
@@ -151,6 +178,24 @@ const styles = {
     color: '#c00',
     borderRadius: '4px',
     fontSize: '14px',
+  },
+  success: {
+    padding: '10px',
+    marginBottom: '20px',
+    backgroundColor: '#d4edda',
+    color: '#155724',
+    borderRadius: '4px',
+    fontSize: '14px',
+  },
+  footer: {
+    marginTop: '20px',
+    textAlign: 'center',
+    fontSize: '14px',
+    color: '#666',
+  },
+  link: {
+    color: '#007bff',
+    textDecoration: 'none',
   },
   hint: {
     marginTop: '30px',

@@ -98,7 +98,11 @@ class KeycloakDockerSetup:
 
         try:
             # Check if client exists
-            client_id_internal = self.keycloak_admin.get_client_id(self.client_id)
+            try:
+                client_id_internal = self.keycloak_admin.get_client_id(self.client_id)
+            except KeycloakGetError:
+                client_id_internal = None
+
             if client_id_internal:
                 print(f"✓ Client '{self.client_id}' already exists")
 
@@ -106,6 +110,9 @@ class KeycloakDockerSetup:
                 client_update = {"secret": self.client_secret}
                 self.keycloak_admin.update_client(client_id_internal, payload=client_update)
                 print(f"✅ Client secret updated to predefined value\n")
+
+                # Configure service account permissions for user management
+                self.assign_client_roles(client_id_internal)
                 return
         except KeycloakGetError:
             pass
@@ -143,6 +150,65 @@ class KeycloakDockerSetup:
         }
         self.keycloak_admin.update_client(client_id_internal, payload=client_update)
         print(f"✅ Client secret set to predefined value\n")
+
+        # Configure service account permissions for user management
+        self.assign_client_roles(client_id_internal)
+
+    def assign_client_roles(self, client_id_internal: str):
+        """
+        Assign necessary roles to service account for user management
+
+        Args:
+            client_id_internal: Internal Keycloak client ID
+        """
+        print("🔐 Configuring service account permissions")
+
+        try:
+            # Get service account user
+            service_account_user = self.keycloak_admin.get_client_service_account_user(client_id_internal)
+
+            if not service_account_user:
+                print("⚠️  Warning: Service account not found")
+                return
+
+            service_account_user_id = service_account_user['id']
+
+            # Get realm-management client
+            try:
+                realm_mgmt_client_id = self.keycloak_admin.get_client_id('realm-management')
+            except KeycloakGetError:
+                print("⚠️  Warning: realm-management client not found")
+                return
+
+            if not realm_mgmt_client_id:
+                print("⚠️  Warning: realm-management client ID is None")
+                return
+
+            # Get required roles
+            available_roles = self.keycloak_admin.get_client_roles(realm_mgmt_client_id)
+
+            roles_to_assign = []
+            required_role_names = ['manage-users', 'view-users', 'query-users']
+
+            for role_name in required_role_names:
+                role = next((r for r in available_roles if r['name'] == role_name), None)
+                if role:
+                    roles_to_assign.append(role)
+
+            if roles_to_assign:
+                # Assign client roles to service account
+                self.keycloak_admin.assign_client_role(
+                    client_id=realm_mgmt_client_id,
+                    user_id=service_account_user_id,
+                    roles=roles_to_assign
+                )
+                print(f"✅ Assigned roles {[r['name'] for r in roles_to_assign]} to service account")
+            else:
+                print("⚠️  Warning: Required roles not found")
+
+        except Exception as e:
+            print(f"⚠️  Warning: Could not assign service account roles: {str(e)}")
+            print("   You may need to manually assign 'manage-users' role in Keycloak admin console")
 
     def create_roles(self):
         """Create realm roles"""
