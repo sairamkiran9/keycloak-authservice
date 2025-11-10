@@ -23,7 +23,14 @@ jobs:
           scan-ref: './auth-service'
           format: 'sarif'
           output: 'trivy-backend-results.sarif'
-      
+
+      - name: Upload Backend Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-backend-results.sarif'
+          category: 'trivy-backend'
+
       - name: Run Trivy vulnerability scanner - Frontend
         uses: aquasecurity/trivy-action@master
         with:
@@ -31,11 +38,13 @@ jobs:
           scan-ref: './frontend'
           format: 'sarif'
           output: 'trivy-frontend-results.sarif'
-      
-      - name: Upload Trivy results to GitHub Security
+
+      - name: Upload Frontend Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
-          sarif_file: '.'
+          sarif_file: 'trivy-frontend-results.sarif'
+          category: 'trivy-frontend'
 
   docker-scan:
     runs-on: ubuntu-latest
