@@ -30,7 +30,7 @@ class KeycloakClient:
         except Exception as e:
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Authentication failed'
             }
     
     def refresh_token(self, refresh_token: str) -> dict:
@@ -41,10 +41,10 @@ class KeycloakClient:
                 'success': True,
                 'tokens': token
             }
-        except Exception as e:
+        except Exception:
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Token refresh failed'
             }
     
     def logout(self, refresh_token: str) -> dict:
@@ -52,10 +52,10 @@ class KeycloakClient:
         try:
             self.keycloak_openid.logout(refresh_token)
             return {'success': True}
-        except Exception as e:
+        except Exception:
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Logout failed'
             }
     
     def get_public_key(self) -> str:
@@ -70,8 +70,8 @@ class KeycloakClient:
                 'success': True,
                 'user_info': user_info
             }
-        except Exception as e:
+        except Exception:
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'Failed to get user info'
             }

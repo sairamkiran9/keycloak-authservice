@@ -4,6 +4,9 @@ from functools import wraps
 from flask import request, jsonify
 from app.config import Config
 from typing import Optional, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 class JWTValidator:
     def __init__(self):
@@ -50,10 +53,10 @@ class JWTValidator:
             
             return decoded
         except jwt.ExpiredSignatureError:
-            print("Token has expired")
+            logger.warning("Token has expired")
             return None
-        except jwt.InvalidTokenError as e:
-            print(f"Invalid token: {str(e)}")
+        except jwt.InvalidTokenError:
+            logger.warning("Invalid token provided")
             return None
     
     def extract_claims(self, token_payload: dict) -> dict:

@@ -1,0 +1,14 @@
+{
+  "name": "Keycloak Auth Service",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [3000, 5000, 8080],
+  "extensions": [
+    "dbaeumer.vscode-eslint",
+    "ms-python.python",
+    "ms-vscode.vscode-docker"
+  ],
+  "postCreateCommand": "bash -c 'cd /workspace/auth-service && pip install -r requirements.txt && cd /workspace/frontend && npm install'",
+  "remoteUser": "node"
+}

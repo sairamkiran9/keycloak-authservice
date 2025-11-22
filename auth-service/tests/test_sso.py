@@ -10,6 +10,7 @@ class TestConfig(Config):
     KEYCLOAK_SERVER_URL = 'http://localhost:8080'
     KEYCLOAK_REALM = 'microservices-realm'
     KEYCLOAK_CLIENT_ID = 'auth-service'
+    KEYCLOAK_CLIENT_SECRET = 'test-client-secret'
 
 
 @pytest.fixture
@@ -132,19 +133,19 @@ class TestOAuthCallback:
 
     def test_oauth_callback_missing_code(self, client):
         """Test OAuth callback without authorization code"""
-        response = client.post('/auth/oauth/callback', 
+        response = client.post('/auth/oauth/callback',
                              json={},
                              content_type='application/json')
-        
-        assert response.status_code == 400
+
+        assert response.status_code == 422
         data = json.loads(response.data)
         assert data['error'] == 'Authorization code required'
 
     def test_oauth_callback_no_json(self, client):
         """Test OAuth callback without JSON body"""
         response = client.post('/auth/oauth/callback')
-        
-        assert response.status_code == 400
+
+        assert response.status_code == 422
         data = json.loads(response.data)
         assert data['error'] == 'JSON body required'
 

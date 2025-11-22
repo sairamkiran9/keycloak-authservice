@@ -234,6 +234,20 @@ keycloak_authservice/
 └── README.md                  # This file
 ```
 
+## 📚 API Documentation
+
+**Interactive API Documentation with Swagger UI:**
+- **Swagger UI**: http://localhost:5000/swagger-ui
+- **ReDoc**: http://localhost:5000/redoc
+- **OpenAPI Spec**: http://localhost:5000/openapi.json
+
+The API includes comprehensive OpenAPI 3.0 documentation with:
+- ✅ Request/response schemas with validation
+- ✅ Interactive endpoint testing
+- ✅ Authentication requirements
+- ✅ Error response documentation
+- ✅ Rate limiting information
+
 ## 🔧 API Endpoints
 
 ### Authentication (`/auth/*`)
@@ -246,6 +260,14 @@ keycloak_authservice/
 | `/auth/logout` | POST | No | Logout user |
 | `/auth/validate` | POST | No | Validate token |
 | `/auth/userinfo` | GET | Yes | Get user info |
+
+### SSO Authentication (`/auth/sso/*`)
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/auth/sso/providers` | GET | No | List SSO providers |
+| `/auth/sso/login/<provider>` | GET | No | Get SSO login URL |
+| `/auth/oauth/callback` | POST | No | Exchange OAuth code |
 
 ### Protected API (`/api/*`)
 
@@ -582,8 +604,11 @@ curl -X POST http://localhost:5000/auth/login \
 4. **Database Integration**: Replace JSON storage with PostgreSQL/MySQL (for production)
 5. **Redis Rate Limiting**: Move from in-memory to Redis for distributed rate limiting
 6. **UI Enhancement**: Add Material-UI, Ant Design, or custom styling
-7. **API Documentation**: Add Swagger/OpenAPI documentation
-8. **Monitoring & Logging**: Add structured logging and metrics collection
+7. **Monitoring & Logging**: Add structured logging and metrics collection
+
+## ✅ Completed Features
+
+- **API Documentation**: Full OpenAPI 3.0 docs with Swagger UI at `/swagger-ui`
 
 ## 🤝 Contributing
 
@@ -602,6 +627,3 @@ MIT License - see LICENSE file for details
 - **Issues**: Check troubleshooting section
 - **Configuration**: Review environment variables and setup guides
 
----
-
-**Built with ❤️ using Keycloak, Python/Flask, and React**

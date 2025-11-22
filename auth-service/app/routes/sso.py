@@ -1,6 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
+from flask_smorest import Blueprint
 from app.config import Config
 from app.keycloak_client import KeycloakClient
+from app.schemas import (
+    SSOProvidersResponseSchema, SSOLoginResponseSchema,
+    OAuthCallbackRequestSchema, OAuthCallbackResponseSchema, ErrorResponseSchema
+)
 from urllib.parse import urlencode
 import os
 
@@ -8,11 +13,12 @@ import os
 keycloak_client = KeycloakClient()
 keycloak_openid = keycloak_client.keycloak_openid
 
-sso_bp = Blueprint('sso', __name__)
+sso_bp = Blueprint('sso', 'sso', url_prefix='/auth', description='SSO authentication endpoints')
 
 @sso_bp.route('/sso/providers', methods=['GET'])
+@sso_bp.response(200, SSOProvidersResponseSchema)
 def get_sso_providers():
-    """Return list of available SSO providers"""
+    """Get list of available SSO providers"""
     providers = []
 
     if os.getenv('SSO_ENABLED') == 'true':
@@ -26,8 +32,14 @@ def get_sso_providers():
     return jsonify({'providers': providers})
 
 @sso_bp.route('/sso/login/<provider>', methods=['GET'])
+@sso_bp.response(200, SSOLoginResponseSchema)
+@sso_bp.response(400, ErrorResponseSchema)
 def sso_login(provider):
-    """Generate Keycloak SSO login URL with IdP hint"""
+    """Generate SSO login URL for provider
+    
+    Args:
+        provider: SSO provider ID (e.g., 'google')
+    """
     keycloak_url = Config.KEYCLOAK_SERVER_URL
     realm = Config.KEYCLOAK_REALM
     client_id = Config.KEYCLOAK_CLIENT_ID
@@ -48,16 +60,14 @@ def sso_login(provider):
     return jsonify({'redirect_url': redirect_url})
 
 @sso_bp.route('/oauth/callback', methods=['POST'])
-def oauth_callback():
-    """Exchange OAuth code for tokens"""
+@sso_bp.arguments(OAuthCallbackRequestSchema)
+@sso_bp.response(200, OAuthCallbackResponseSchema)
+@sso_bp.response(400, ErrorResponseSchema)
+def oauth_callback(json_data):
+    """Exchange OAuth authorization code for tokens"""
 
-    data = request.get_json(force=True, silent=True)
-    if data is None:
-        return jsonify({'error': 'JSON body required'}), 400
-        
-    code = data.get('code')
-    if not code:
-        return jsonify({'error': 'Authorization code required'}), 400
+    data = json_data
+    code = data['code']
 
     try:
         # Exchange code for token

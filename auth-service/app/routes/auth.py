@@ -1,8 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
+from flask_smorest import Blueprint
 from app.keycloak_client import KeycloakClient
 from app.utils.jwt_utils import JWTValidator, jwt_required
 from app.utils.validators import validate_registration_data
 from app.config import Config
+from app.schemas import (
+    LoginRequestSchema, LoginResponseSchema, RefreshTokenRequestSchema,
+    RefreshTokenResponseSchema, LogoutRequestSchema, LogoutResponseSchema,
+    ValidateTokenRequestSchema, ValidateTokenResponseSchema, UserInfoResponseSchema,
+    RegisterRequestSchema, RegisterResponseSchema, ErrorResponseSchema
+)
 import json
 import os
 
@@ -19,7 +26,7 @@ def get_keycloak_admin():
 # Import limiter for rate limiting
 from app import limiter
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', 'auth', url_prefix='/auth', description='Authentication endpoints')
 keycloak_client = KeycloakClient()
 jwt_validator = JWTValidator()
 
@@ -39,12 +46,13 @@ def save_client(client_data):
         json.dump(clients, f, indent=2)
 
 @auth_bp.route('/login', methods=['POST'])
-def login():
-    """Login endpoint - authenticate user with Keycloak"""
-    data = request.get_json()
-    
-    if not data or not data.get('username') or not data.get('password'):
-        return jsonify({'error': 'Username and password required'}), 400
+@auth_bp.arguments(LoginRequestSchema)
+@auth_bp.response(200, LoginResponseSchema)
+@auth_bp.response(400, ErrorResponseSchema)
+@auth_bp.response(401, ErrorResponseSchema)
+def login(json_data):
+    """Login with username and password"""
+    data = json_data
     
     # Authenticate with Keycloak
     result = keycloak_client.authenticate(
@@ -82,12 +90,13 @@ def login():
     }), 200
 
 @auth_bp.route('/refresh', methods=['POST'])
-def refresh():
+@auth_bp.arguments(RefreshTokenRequestSchema)
+@auth_bp.response(200, RefreshTokenResponseSchema)
+@auth_bp.response(400, ErrorResponseSchema)
+@auth_bp.response(401, ErrorResponseSchema)
+def refresh(json_data):
     """Refresh access token using refresh token"""
-    data = request.get_json()
-    
-    if not data or not data.get('refresh_token'):
-        return jsonify({'error': 'Refresh token required'}), 400
+    data = json_data
     
     # Refresh token with Keycloak
     result = keycloak_client.refresh_token(data['refresh_token'])
@@ -107,12 +116,12 @@ def refresh():
     }), 200
 
 @auth_bp.route('/logout', methods=['POST'])
-def logout():
+@auth_bp.arguments(LogoutRequestSchema)
+@auth_bp.response(200, LogoutResponseSchema)
+@auth_bp.response(400, ErrorResponseSchema)
+def logout(json_data):
     """Logout user and invalidate tokens"""
-    data = request.get_json()
-    
-    if not data or not data.get('refresh_token'):
-        return jsonify({'error': 'Refresh token required'}), 400
+    data = json_data
     
     result = keycloak_client.logout(data['refresh_token'])
     
@@ -122,12 +131,13 @@ def logout():
     return jsonify({'message': 'Logout successful'}), 200
 
 @auth_bp.route('/validate', methods=['POST'])
-def validate():
+@auth_bp.arguments(ValidateTokenRequestSchema)
+@auth_bp.response(200, ValidateTokenResponseSchema)
+@auth_bp.response(400, ErrorResponseSchema)
+@auth_bp.response(401, ErrorResponseSchema)
+def validate(json_data):
     """Validate access token"""
-    data = request.get_json()
-    
-    if not data or not data.get('token'):
-        return jsonify({'error': 'Token required'}), 400
+    data = json_data
     
     # Decode and validate token
     payload = jwt_validator.decode_token(data['token'])
@@ -143,6 +153,9 @@ def validate():
     }), 200
 
 @auth_bp.route('/userinfo', methods=['GET'])
+@auth_bp.doc(security=[{"bearerAuth": []}])
+@auth_bp.response(200, UserInfoResponseSchema)
+@auth_bp.response(401, ErrorResponseSchema)
 @jwt_required()
 def userinfo():
     """Get current user information from token"""
@@ -151,34 +164,23 @@ def userinfo():
     }), 200
 
 @auth_bp.route('/register', methods=['POST'])
+@auth_bp.arguments(RegisterRequestSchema)
+@auth_bp.response(201, RegisterResponseSchema)
+@auth_bp.response(400, ErrorResponseSchema)
+@auth_bp.response(403, ErrorResponseSchema)
+@auth_bp.response(409, ErrorResponseSchema)
+@auth_bp.response(500, ErrorResponseSchema)
 @limiter.limit("5 per 15 minutes")  # Max 5 registrations per 15 minutes per IP
-def register():
-    """
-    User registration endpoint
-
-    Request body:
-        {
-            "username": "string (required)",
-            "email": "string (required)",
-            "password": "string (required)",
-            "firstName": "string (optional)",
-            "lastName": "string (optional)"
-        }
-
-    Returns:
-        201: Registration successful
-        400: Validation error
-        409: Username or email already exists
-        500: Server error
+def register(json_data):
+    """Register new user
+    
+    Rate limited: 5 registrations per 15 minutes per IP
     """
     # Check if registration is enabled
     if not Config.REGISTRATION_ENABLED:
         return jsonify({'error': 'Registration is currently disabled'}), 403
 
-    data = request.get_json()
-
-    if not data:
-        return jsonify({'error': 'Request body is required'}), 400
+    data = json_data
 
     # Validate input data
     validation_result = validate_registration_data(data, Config.MIN_PASSWORD_LENGTH)

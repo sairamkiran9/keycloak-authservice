@@ -56,7 +56,10 @@ class TestSSOEndToEndFlow:
         # Verify redirect URL structure
         assert 'localhost:8080/realms/microservices-realm/protocol/openid-connect/auth' in redirect_url
         assert 'kc_idp_hint=google' in redirect_url
-        assert 'redirect_uri=http%3A//localhost%3A3000/callback' in redirect_url or 'redirect_uri=http://localhost:3000/callback' in redirect_url
+        # URL encoding may vary - check for the callback path
+        from urllib.parse import unquote
+        decoded_url = unquote(redirect_url)
+        assert 'redirect_uri=http://localhost:3000/callback' in decoded_url
         
         # Step 3: Simulate OAuth callback with authorization code
         with patch('app.routes.sso.keycloak_openid') as mock_keycloak:
@@ -104,12 +107,13 @@ class TestSSOEndToEndFlow:
 
     def test_sso_error_handling(self, client):
         """Test error handling in SSO flow"""
-        
+
         # Test callback without code
         response = client.post('/auth/oauth/callback',
                              json={},
                              content_type='application/json')
-        assert response.status_code == 400
+        # flask-smorest returns 422 for validation errors
+        assert response.status_code == 422
         
         # Test callback with invalid code
         with patch('app.routes.sso.keycloak_openid') as mock_keycloak:
@@ -154,12 +158,14 @@ class TestSSOSecurityConsiderations:
 
     def test_redirect_uri_validation(self, client):
         """Test that redirect URI is properly set"""
-        
+
         response = client.get('/auth/sso/login/google')
         data = json.loads(response.data)
-        
-        # Ensure redirect URI points to expected callback
-        assert 'redirect_uri=http%3A//localhost%3A3000/callback' in data['redirect_url'] or 'redirect_uri=http://localhost:3000/callback' in data['redirect_url']
+
+        # Ensure redirect URI points to expected callback (URL-decoded check)
+        from urllib.parse import unquote
+        decoded_url = unquote(data['redirect_url'])
+        assert 'redirect_uri=http://localhost:3000/callback' in decoded_url
 
     def test_scope_configuration(self, client):
         """Test that proper OAuth scopes are requested"""

@@ -1,9 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
+from flask_smorest import Blueprint
 from app.utils.jwt_utils import jwt_required
+from app.schemas import (
+    PublicResponseSchema, ProtectedResponseSchema, AdminResponseSchema,
+    UserDataResponseSchema, ErrorResponseSchema
+)
 
-protected_bp = Blueprint('protected', __name__, url_prefix='/api')
+protected_bp = Blueprint('protected', 'protected', url_prefix='/api', description='Protected API endpoints')
 
 @protected_bp.route('/public', methods=['GET'])
+@protected_bp.response(200, PublicResponseSchema)
 def public_endpoint():
     """Public endpoint - no authentication required"""
     return jsonify({
@@ -12,6 +18,9 @@ def public_endpoint():
     }), 200
 
 @protected_bp.route('/protected', methods=['GET'])
+@protected_bp.doc(security=[{"bearerAuth": []}])
+@protected_bp.response(200, ProtectedResponseSchema)
+@protected_bp.response(401, ErrorResponseSchema)
 @jwt_required()
 def protected_endpoint():
     """Protected endpoint - requires valid JWT token"""
@@ -25,6 +34,10 @@ def protected_endpoint():
     }), 200
 
 @protected_bp.route('/admin', methods=['GET'])
+@protected_bp.doc(security=[{"bearerAuth": []}])
+@protected_bp.response(200, AdminResponseSchema)
+@protected_bp.response(401, ErrorResponseSchema)
+@protected_bp.response(403, ErrorResponseSchema)
 @jwt_required(roles=['admin'])
 def admin_endpoint():
     """Admin-only endpoint - requires admin role"""
@@ -37,6 +50,10 @@ def admin_endpoint():
     }), 200
 
 @protected_bp.route('/user-data', methods=['GET'])
+@protected_bp.doc(security=[{"bearerAuth": []}])
+@protected_bp.response(200, UserDataResponseSchema)
+@protected_bp.response(401, ErrorResponseSchema)
+@protected_bp.response(403, ErrorResponseSchema)
 @jwt_required(roles=['user', 'admin'])
 def user_data_endpoint():
     """User data endpoint - requires user or admin role"""
