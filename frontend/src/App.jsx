@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import PublicPage from './components/PublicPage';
+import OAuthCallback from './components/OAuthCallback';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/public" element={<PublicPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/callback" element={<OAuthCallback />} />
 
           {/* Protected routes */}
           <Route

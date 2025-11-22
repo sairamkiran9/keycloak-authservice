@@ -3,6 +3,10 @@ guide/
 .claude
 CLAUDE.md
 
+.todos/
+
+client_secret*
+
 # Python
 __pycache__/
 *.py[cod]

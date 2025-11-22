@@ -289,6 +289,57 @@ class KeycloakDockerSetup:
 
         print()
 
+    def create_google_idp(self):
+        """Create Google Identity Provider if SSO is enabled"""
+        if not os.getenv('SSO_ENABLED') == 'true':
+            print("⏭️  SSO disabled, skipping Google IdP setup")
+            return
+
+        print("🔗 Configuring Google Identity Provider")
+
+        google_client_id = os.getenv('GOOGLE_CLIENT_ID')
+        google_client_secret = os.getenv('GOOGLE_CLIENT_SECRET')
+
+        if not google_client_id or not google_client_secret:
+            print("⚠️  Warning: Google credentials not found, skipping")
+            return
+
+        self.keycloak_admin.realm_name = self.realm_name
+
+        try:
+            # Check if Google IdP already exists
+            idps = self.keycloak_admin.get_idps()
+            google_idp = next((idp for idp in idps if idp['alias'] == 'google'), None)
+
+            if google_idp:
+                print("✓ Google IdP already exists")
+                return
+        except Exception:
+            pass
+
+        # Create Google IdP
+        idp_payload = {
+            "alias": "google",
+            "displayName": "Sign in with Google",
+            "providerId": "google",
+            "enabled": True,
+            "trustEmail": True,
+            "storeToken": True,
+            "addReadTokenRoleOnCreate": False,
+            "authenticateByDefault": False,
+            "linkOnly": False,
+            "firstBrokerLoginFlowAlias": "first broker login",
+            "config": {
+                "clientId": google_client_id,
+                "clientSecret": google_client_secret,
+                "defaultScope": "openid profile email",
+                "useJwksUrl": "true"
+            }
+        }
+
+        self.keycloak_admin.create_idp(idp_payload)
+        print("✅ Google Identity Provider created successfully\n")
+
     def setup_all(self):
         """Run complete Keycloak setup"""
         print("=" * 60)
@@ -327,6 +378,9 @@ class KeycloakDockerSetup:
                 last_name='User',
                 roles=['user', 'admin']
             )
+
+            # 5. Configure Google SSO
+            self.create_google_idp()
 
             print("=" * 60)
             print("✅ KEYCLOAK DOCKER SETUP COMPLETED SUCCESSFULLY!")

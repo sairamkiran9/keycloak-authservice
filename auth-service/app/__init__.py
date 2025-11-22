@@ -31,10 +31,12 @@ def create_app(config_class=Config):
     # Import blueprints here to avoid circular imports
     from app.routes.auth import auth_bp
     from app.routes.protected import protected_bp
+    from app.routes.sso import sso_bp
 
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(protected_bp)
+    app.register_blueprint(sso_bp, url_prefix='/auth')
 
     @app.route('/health', methods=['GET'])
     def health_check():

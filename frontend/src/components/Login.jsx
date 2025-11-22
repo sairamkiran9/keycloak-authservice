@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import SSOButton from './SSOButton';
+import api from '../services/authService';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ssoProviders, setSsoProviders] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -22,6 +25,15 @@ const Login = () => {
     }
   }, [prefilledUsername]);
 
+  useEffect(() => {
+    // Fetch available SSO providers
+    api.get('/auth/sso/providers').then(response => {
+      setSsoProviders(response.providers || []);
+    }).catch(err => {
+      console.error('Failed to fetch SSO providers', err);
+    });
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -36,6 +48,17 @@ const Login = () => {
     }
 
     setLoading(false);
+  };
+
+  const handleSSOLogin = async (provider) => {
+    try {
+      const response = await api.get(`/auth/sso/login/${provider}`);
+      // Redirect to Keycloak + Google
+      window.location.href = response.redirect_url;
+    } catch (error) {
+      console.error('SSO login error:', error);
+      setError('SSO login failed');
+    }
   };
 
   return (
@@ -94,6 +117,26 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        {/* SSO Options */}
+        {ssoProviders.length > 0 && (
+          <>
+            <div style={styles.divider}>
+              <span style={styles.dividerText}>OR</span>
+            </div>
+
+            <div style={styles.ssoButtons}>
+              {ssoProviders.map(provider => (
+                <SSOButton
+                  key={provider.id}
+                  provider={provider}
+                  onClick={handleSSOLogin}
+                  loading={loading}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Registration Link (NEW) */}
         <div style={styles.footer}>
@@ -205,6 +248,23 @@ const styles = {
     fontSize: '12px',
     color: '#666',
     lineHeight: '1.6',
+  },
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '20px 0',
+    color: '#999',
+  },
+  dividerText: {
+    margin: '0 10px',
+    fontSize: '12px',
+  },
+  ssoButtons: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    marginBottom: '20px',
   },
 };
 

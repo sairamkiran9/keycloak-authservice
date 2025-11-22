@@ -160,6 +160,47 @@ class AuthService {
     }
   }
 
+  // Generic GET method
+  async get(endpoint) {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`);
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Request failed');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('GET request error:', error);
+      throw error;
+    }
+  }
+
+  // Generic POST method
+  async post(endpoint, data) {
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Request failed');
+      }
+      
+      return responseData;
+    } catch (error) {
+      console.error('POST request error:', error);
+      throw error;
+    }
+  }
+
   // Call protected API endpoint
   async callProtectedAPI(endpoint, options = {}) {
     try {
